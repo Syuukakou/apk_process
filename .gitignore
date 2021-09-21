@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+files/apk_ELF_infos.json
+files/apk_extractedELF_2.json
+files/apk_extractedELF_3.json
+files/apk_extractedELF.json
+files/apk_extractedELF_1.json
+files/Total_data.json

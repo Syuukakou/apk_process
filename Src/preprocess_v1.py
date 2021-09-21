@@ -115,24 +115,14 @@ def extractELF_fromAPK_1(unzipped_apk):
         for file in files:
             filepath = os.path.join(curDirs, file)
             if os.path.isfile(filepath):
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(60)
-                try:
-                    output = subprocess.check_output("file " + filepath, shell=True)
-                    if 'ELF' in output.decode('utf-8') and "1564480_0d7525006d71b06d8f8e394e7cb8219bd418681f6fc9b0007d10872ca8fb8c2c" not in filepath:
-                        # and "1564480_0d7525006d71b06d8f8e394e7cb8219bd418681f6fc9b0007d10872ca8fb8c2c" not in filepath
-                        # elf_name = os.path.basename(filepath)
-                        md5_value = generage_md5(filepath)
-                        binary = lief.parse(filepath)
-                        architecture = str(binary.header.machine_type).split('.')[1].lower()
-                        elf_infos[md5_value] = {"architecture": architecture, "filepath": filepath}
-                except Exception as e:
-                    print(filepath, " Timeout Error")
-                    with open("files/timeout_error.txt", "a+") as f:
-                        f.write("%s\n" % filepath)
-                finally:
-                    signal.alarm(60)
-                    print("reset alarm")
+                output = subprocess.check_output("file " + filepath, shell=True)
+                if 'ELF' in output.decode('utf-8') and "1564480_0d7525006d71b06d8f8e394e7cb8219bd418681f6fc9b0007d10872ca8fb8c2c" not in filepath:
+                    # and "1564480_0d7525006d71b06d8f8e394e7cb8219bd418681f6fc9b0007d10872ca8fb8c2c" not in filepath
+                    # elf_name = os.path.basename(filepath)
+                    # md5_value = generage_md5(filepath)
+                    binary = lief.parse(filepath)
+                    architecture = str(binary.header.machine_type).split('.')[1].lower()
+                    elf_infos[filepath] = {"architecture": architecture}
     
     return elf_infos
                     # print(filepath)                     
@@ -166,20 +156,28 @@ if __name__ == '__main__':
 
     unzip_apk = "/home/syuu/unzip_apk"
     statistics_results = {}
-    p = Pool(6)
+    # p = Pool(6)
     for folder in os.listdir(unzip_apk):
         folderpath = os.path.join(unzip_apk, folder)
         if os.path.isdir(folderpath):
             apk_name = folderpath.strip('/home/syuu/unzip_apk/')
             print(apk_name)
             # elf_infos = extractELF_fromAPK_1(folderpath)
-        
-            p_out = p.apply_async(extractELF_fromAPK_1, [folderpath])
-            elf_infos = p_out.get()
-            # statistics_results[apk_name] = elf_infos
-            with open("files/apk_extractedELF_1.json", "a+") as f:
-                json.dump({apk_name: elf_infos}, f)
-            print(elf_infos)
-            
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(60)
+            try:
+                # p_out = p.apply_async(extractELF_fromAPK_1, [folderpath])
+                elf_infos = extractELF_fromAPK_1(folderpath)
+                # statistics_results[apk_name] = elf_infos
+                with open("files/apk_extractedELF_3.json", "a+") as f:
+                    json.dump({apk_name: elf_infos}, f)
+                print(elf_infos)
+            except Exception as e:
+                print(folderpath, " Timeout Error")
+                with open("files/timeout_error_3.txt", "a+") as f:
+                    f.write("%s\n" % folderpath)
+            finally:
+                signal.alarm(60)
+                print("reset alarm")
     # with open("files\apk_extractedELF.json", "w") as f:
     #     json.dump(statistics_results, f)
